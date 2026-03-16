@@ -46,8 +46,8 @@ df = pd.read_csv("train.csv")
 text_column = df.columns[0]
 label_column = df.columns[1]
 
-X = df[text_column]
-y = df[label_column]
+X = df.iloc[:,0]
+y = df.iloc[:,1]
 
 # Train model
 vectorizer = TfidfVectorizer()
