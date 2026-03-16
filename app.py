@@ -10,97 +10,134 @@ st.set_page_config(page_title="AI Sentiment Analyzer", page_icon="🤖", layout=
 # Animated background
 st.markdown("""
 <style>
-.stApp {
-background: linear-gradient(120deg,#1f4037,#99f2c8);
+
+@keyframes gradientMove {
+0% {background-position:0% 50%;}
+50% {background-position:100% 50%;}
+100% {background-position:0% 50%;}
 }
+
+.stApp {
+background: linear-gradient(270deg,#0f2027,#203a43,#2c5364);
+background-size: 600% 600%;
+animation: gradientMove 15s ease infinite;
+color: white;
+}
+
+[data-testid="stSidebar"] {
+background: linear-gradient(180deg,#000428,#004e92);
+}
+
 </style>
 """, unsafe_allow_html=True)
 
-st.sidebar.title("AI Dashboard")
-page = st.sidebar.radio("Navigation", ["Sentiment Analyzer", "Live Dashboard", "Dataset Explorer", "About"])
+# Sidebar
+st.sidebar.title("🤖 AI Dashboard")
+
+page = st.sidebar.radio(
+    "Navigation",
+    ["Sentiment Analyzer", "Live Dashboard", "Dataset Explorer", "About"]
+)
 
 # Load dataset
 df = pd.read_csv("train.csv")
 
-X = df["text"]
-y = df["label"]
+# Auto detect dataset columns
+text_column = df.columns[0]
+label_column = df.columns[1]
 
+X = df[text_column]
+y = df[label_column]
+
+# Train model
 vectorizer = TfidfVectorizer()
 X_vectorized = vectorizer.fit_transform(X)
 
 model = LogisticRegression()
 model.fit(X_vectorized, y)
 
-# -------- SENTIMENT ANALYZER --------
+# ---------------- SENTIMENT ANALYZER ----------------
 
 if page == "Sentiment Analyzer":
 
-    st.title("🤖 AI Sentiment Analyzer")
+    st.title("🤖 AI Tweet Sentiment Analyzer")
 
-    text = st.text_area("Enter a Tweet")
+    st.write("Enter a tweet and the AI will detect its sentiment.")
+
+    user_input = st.text_area("Enter Tweet")
 
     if st.button("Analyze Sentiment"):
 
-        vector = vectorizer.transform([text])
+        vector = vectorizer.transform([user_input])
         prediction = model.predict(vector)[0]
         probability = model.predict_proba(vector)[0]
 
         confidence = max(probability) * 100
 
         if prediction == 1:
-            st.success("😊 Positive Sentiment")
+            st.success("😊 Positive Sentiment Detected")
         else:
-            st.error("😡 Negative Sentiment")
+            st.error("😡 Negative Sentiment Detected")
 
         st.subheader("AI Confidence Meter")
 
         st.progress(int(confidence))
-        st.write(f"Confidence Level: {confidence:.2f}%")
 
-# -------- LIVE DASHBOARD --------
+        st.write(f"Confidence: {confidence:.2f}%")
+
+# ---------------- LIVE DASHBOARD ----------------
 
 elif page == "Live Dashboard":
 
     st.title("📊 Live Tweet Sentiment Dashboard")
 
-    sentiment_counts = df["label"].value_counts()
+    sentiment_counts = df[label_column].value_counts()
 
     chart_data = pd.DataFrame({
-        "Sentiment": ["Negative", "Positive"],
-        "Count": sentiment_counts
+        "Sentiment": sentiment_counts.index.astype(str),
+        "Count": sentiment_counts.values
     })
 
-    fig = px.bar(chart_data, x="Sentiment", y="Count", title="Sentiment Distribution")
+    fig = px.bar(
+        chart_data,
+        x="Sentiment",
+        y="Count",
+        color="Sentiment",
+        title="Sentiment Distribution"
+    )
 
     st.plotly_chart(fig)
 
-    st.subheader("Dataset Preview")
+    st.subheader("Random Tweets from Dataset")
 
     st.dataframe(df.sample(10))
 
-# -------- DATASET EXPLORER --------
+# ---------------- DATASET EXPLORER ----------------
 
 elif page == "Dataset Explorer":
 
-    st.title("Dataset Explorer")
+    st.title("📂 Dataset Explorer")
 
-    st.write("First 10 rows of dataset")
+    st.write("Preview of dataset")
 
-    st.dataframe(df.head(10))
+    st.dataframe(df.head(20))
 
-# -------- ABOUT --------
+# ---------------- ABOUT ----------------
 
 else:
 
     st.title("About This Project")
 
     st.write("""
-This project demonstrates **AI-based Sentiment Analysis** using:
+This AI application performs **Sentiment Analysis on Tweets**.
 
+### Technologies Used
+
+• Python  
+• Streamlit  
 • TF-IDF Vectorization  
 • Logistic Regression  
-• Real-time predictions  
-• Interactive Dashboard  
+• Interactive Dashboard
 
-Built using Python and Streamlit.
+This project demonstrates how Machine Learning models can analyze social media sentiment in real-time.
 """)
