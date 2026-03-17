@@ -24,7 +24,7 @@ page = st.sidebar.radio(
 )
 
 # Load dataset
-df = pd.read_csv("train.csv")
+df = pd.read_csv("train_reviews_dataset.csv")
 
 # Remove empty rows
 df = df.dropna()
